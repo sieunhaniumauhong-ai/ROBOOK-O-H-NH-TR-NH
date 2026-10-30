@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robook – Hải trình kỹ năng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Lexend:wght@400;600&family=Patrick+Hand&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+:root{
+  --sea:#0D4F7C; --sea2:#0A3A5C; --deep:#072A43; --foam:#BFE6F5;
+  --sand:#F2C46D; --leaf:#2FA36B; --coral:#FF6B4A; --gold:#FFC93C;
+  --ink:#122033; --muted:#5A6B80; --page:#FFFFFF; --rule:#D5E7F3;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Lexend',system-ui,sans-serif;color:var(--ink);background:var(--deep);min-height:100vh}
+button{font:inherit}
+h1,h2,h3,.disp{font-family:'Baloo 2',system-ui,sans-serif}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:var(--deep);border-bottom:3px solid var(--sea)}
+.top .in{max-width:1080px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-family:'Baloo 2';font-weight:800;font-size:28px;color:#fff;background:none;border:0;padding:0;cursor:pointer;line-height:1}
+.logo b{color:var(--gold)}
+.pieces{display:flex;align-items:center;gap:8px;color:#fff;font-size:15px;margin-left:auto}
+.slots{display:flex;gap:4px}
+.slot{width:20px;height:20px;border-radius:4px;border:2px dashed #4E7FA3}
+.slot.on{background:var(--gold);border:2px solid #fff;transform:rotate(-6deg)}
+.toplink{color:#fff;background:transparent;border:2px solid #3E6E92;border-radius:99px;padding:7px 14px;cursor:pointer;font-size:15px}
+.toplink:hover,.toplink:focus-visible{border-color:var(--gold);outline:none}
+
+/* map view */
+.mapwrap{max-width:1080px;margin:0 auto;padding:26px 18px 50px}
+.intro{color:#fff;margin-bottom:18px}
+.intro h1{font-size:54px;line-height:1;margin:0 0 10px;letter-spacing:-1px}
+.intro h1 span{color:var(--gold)}
+.intro p{font-size:19px;line-height:1.5;margin:0;max-width:52ch;color:var(--foam)}
+.map{width:100%;height:auto;display:block;border-radius:22px;border:4px solid var(--sea);background:var(--sea)}
+.isl{cursor:pointer}
+.isl:focus{outline:none}
+.isl:focus-visible .ring,.isl:hover .ring{stroke:var(--gold);stroke-width:6}
+.isl .lbl{font-family:'Baloo 2';font-weight:800;font-size:26px;fill:#fff;paint-order:stroke;stroke:var(--deep);stroke-width:7px;stroke-linejoin:round}
+.isl.locked .body{filter:saturate(.25) brightness(.85)}
+.sealbl{font-family:'Baloo 2';font-weight:800;font-size:24px;fill:var(--foam);opacity:.85}
+.bob{animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+
+.list{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+.sea-col h3{color:var(--foam);font-size:20px;margin:0 0 8px}
+.ibtn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--sea2);color:#fff;border:2px solid #24608A;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;font-size:16px}
+.ibtn:hover,.ibtn:focus-visible{border-color:var(--gold);outline:none}
+.ibtn .dot{width:14px;height:14px;border-radius:50%;background:#fff;flex:0 0 auto}
+.ibtn.done .dot{background:var(--gold)}
+.ibtn.locked{opacity:.6}
+.ibtn small{display:block;color:var(--foam);font-size:13px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#fff;color:var(--ink);padding:12px 18px;border-radius:12px;font-size:16px;box-shadow:0 8px 24px rgba(0,0,0,.35);display:none;z-index:30;max-width:90vw}
+
+/* page (reading/game) */
+.view{display:none}
+.view.show{display:block}
+.book{max-width:680px;margin:26px auto 120px;padding:0 16px}
+.sheet{
+  background:var(--page);border-radius:18px;padding:30px 28px 30px 30px;position:relative;
+  background-image:linear-gradient(var(--rule) 1px,transparent 1px);background-size:100% 38px;background-position:0 22px;
+  box-shadow:0 10px 0 var(--sea2);min-height:440px
+}
+.crumb{font-size:15px;color:var(--muted);margin-bottom:8px;background:#fff;display:inline-block}
+.sheet h2{font-size:38px;line-height:1.1;margin:0 0 14px;color:var(--sea);background:#fff;display:inline}
+.sheet h2+*{margin-top:16px}
+.sheet p{font-size:22px;line-height:1.7;margin:0 0 12px;max-width:32ch}
+.sheet p.big{font-size:27px;font-weight:600;line-height:1.45}
+.sheet p.small{font-size:18px;color:var(--muted)}
+.log{font-family:'Patrick Hand',cursive;font-size:26px;line-height:1.4;color:var(--sea);background:#F1F9FD;border:2px solid var(--sea);border-radius:6px 18px 6px 18px;padding:14px 18px;margin:8px 0 16px}
+.rules{list-style:none;padding:0;margin:4px 0 8px}
+.rules li{display:flex;gap:12px;align-items:baseline;font-size:20px;line-height:1.45;margin-bottom:10px;background:#fff}
+.rules b{flex:0 0 112px;text-align:center;background:var(--gold);border-radius:6px;padding:0 6px}
+.law{background:var(--coral);color:#fff;font-family:'Baloo 2';font-weight:800;font-size:26px;line-height:1.2;padding:14px 18px;border-radius:12px;margin-top:10px;transform:rotate(-1deg)}
+
+.gtag{display:inline-block;background:var(--coral);color:#fff;font-weight:600;font-size:15px;padding:5px 12px;border-radius:99px;margin-bottom:10px}
+.choices{display:flex;flex-direction:column;gap:12px;margin:14px 0}
+.choice{font-size:19px;text-align:left;padding:14px 18px;background:#fff;color:var(--ink);border:3px solid var(--sea);border-radius:14px;cursor:pointer;box-shadow:0 4px 0 var(--sea);line-height:1.4}
+.choice:active{transform:translateY(3px);box-shadow:0 1px 0 var(--sea)}
+.choice:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.choice.right{background:#E2F6EC;border-color:var(--leaf);box-shadow:0 4px 0 var(--leaf)}
+.choice.wrong{background:#FFE9E4;border-color:var(--coral);box-shadow:0 4px 0 var(--coral)}
+.choice.picked{background:#FFF4CF;border-color:#C99A12;box-shadow:0 4px 0 #C99A12}
+.choice[disabled]{cursor:default}
+.fb{font-size:19px;line-height:1.5;padding:14px 16px;border-radius:12px;background:#fff;border:2px solid var(--leaf);border-left-width:8px;margin:8px 0}
+.fb.bad{border-color:var(--coral)}
+.fb.info{border-color:var(--sea)}
+
+.fake{border:3px solid var(--ink);border-radius:14px;overflow:hidden;background:#fff;margin:10px 0 14px}
+.fake .url{background:#E9EEF3;padding:9px 12px;font-size:15px;display:flex;gap:8px;align-items:center}
+.fake .url .dotz{display:flex;gap:4px}.fake .url .dotz i{width:9px;height:9px;border-radius:50%;background:#B5C0CC;display:block}
+.fake .body{padding:16px;text-align:center}
+.fake .gem{width:54px;margin:0 auto 6px;display:block}
+.fake .hd{font-family:'Baloo 2';font-weight:800;font-size:26px;line-height:1.15;color:#7B2CBF}
+.fake .tm{font-size:17px;color:var(--coral);font-weight:600;margin:8px 0}
+.fake .inp{border:2px solid #C8D2DC;border-radius:8px;padding:9px 12px;text-align:left;color:#8A97A6;font-size:16px;margin:8px auto;max-width:300px}
+.fake .go{display:inline-block;background:#7B2CBF;color:#fff;font-weight:600;border-radius:8px;padding:9px 18px;margin-top:4px}
+.flag{cursor:pointer;border-radius:6px;transition:box-shadow .2s,background .2s}
+.flag:hover{box-shadow:0 0 0 3px rgba(255,201,60,.6)}
+.flag:focus-visible{outline:3px solid var(--sea);outline-offset:2px}
+.flag.hit{box-shadow:0 0 0 4px var(--gold);background:#FFF4CF}
+.flag.miss{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.found{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.found span{font-size:15px;font-weight:600;padding:6px 12px;border-radius:99px;border:2px dashed var(--sea);color:var(--sea);background:#fff}
+.found span.on{border-style:solid;background:var(--gold);color:var(--ink);border-color:var(--ink)}
+
+.call{background:var(--ink);color:#fff;border-radius:20px;padding:20px;text-align:center;margin:8px 0 14px}
+.call .face{width:84px;height:84px;border-radius:50%;margin:0 auto 8px;background:#FFD9C9;color:var(--ink);display:grid;place-items:center;font-family:'Baloo 2';font-weight:800;font-size:28px;border:4px solid #fff}
+.call .sub{font-size:14px;color:#A9B8C9}
+.call .say{font-family:'Patrick Hand';font-size:24px;margin-top:10px;line-height:1.35}
+
+.reward{text-align:center}
+.reward p{margin-left:auto!important;margin-right:auto!important}
+.piece{width:150px;margin:6px auto 10px;display:block;animation:spin .9s cubic-bezier(.3,1.5,.5,1)}
+@keyframes spin{from{transform:scale(.2) rotate(-160deg);opacity:0}}
+
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--deep);border-top:3px solid var(--sea);z-index:15}
+.nav .in{max-width:680px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.prog{flex:1;height:12px;border-radius:99px;background:var(--sea2);overflow:hidden;border:2px solid #24608A}
+.prog i{display:block;height:100%;background:var(--gold);width:0;transition:width .3s}
+.btn{font-family:'Baloo 2';font-weight:800;font-size:20px;padding:11px 24px;border-radius:14px;cursor:pointer;border:none;background:var(--gold);color:var(--ink);box-shadow:0 5px 0 #B98A0E}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #B98A0E}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.btn.ghost{background:transparent;color:#fff;box-shadow:none;border:2px solid #3E6E92}
+.btn.sea{background:var(--sea);color:#fff;box-shadow:0 5px 0 var(--deep)}
+.btn[disabled]{opacity:.35;cursor:not-allowed;transform:none}
+.page-anim{animation:turn .3s ease-out}
+@keyframes turn{from{opacity:0;transform:translateX(14px)}}
+
+/* parents */
+.parents{max-width:760px;margin:26px auto 60px;padding:0 16px}
+.parents .sheet{min-height:0}
+.parents h2{font-size:36px}
+.parents h3{font-size:24px;color:var(--sea);margin:26px 0 8px;background:#fff;display:inline-block}
+.parents p,.parents li{font-size:18px;line-height:1.7;max-width:60ch}
+.ptable{width:100%;border-collapse:collapse;margin-top:6px;background:#fff}
+.ptable td{border:2px solid var(--rule);padding:10px 12px;font-size:16px;line-height:1.5;vertical-align:top}
+.ptable td:first-child{font-weight:600;width:34%}
+.st{font-size:13px;font-weight:600;padding:3px 9px;border-radius:99px;background:#E9EEF3;white-space:nowrap}
+.st.ok{background:var(--gold)}
+.do{padding-left:22px}
+.do li{margin-bottom:8px}
+
+@media (max-width:760px){
+  .intro h1{font-size:40px}
+  .list{grid-template-columns:1fr}
+  .sheet{padding:24px 18px}
+  .sheet h2{font-size:31px}
+  .sheet p{font-size:20px}
+  .pieces .txt{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="in">
+  <button class="logo" id="goHome">Ro<b>book</b></button>
+  <button class="toplink" id="goParents">Dành cho bố mẹ</button>
+  <div class="pieces"><span class="txt">Mảnh bản đồ</span><div class="slots" id="slots"></div><span id="pc">0/6</span></div>
+</div></header>
+
+<!-- MAP -->
+<section class="view show" id="vMap"><div class="mapwrap">
+  <div class="intro">
+    <h1>Hải trình <span>kỹ năng số</span></h1>
+    <p>Mỗi hòn đảo là một kỹ năng bố mẹ chưa từng được dạy. Đọc nhật ký, vượt thử thách, nhận mảnh bản đồ. Gom đủ mảnh để mở kho báu.</p>
+  </div>
+  <svg class="map" id="map" viewBox="0 0 1000 620" role="img" aria-label="Bản đồ hải trình"></svg>
+  <div class="list" id="list"></div>
+</div></section>
+
+<!-- ISLAND -->
+<section class="view" id="vIsland">
+  <div class="book"><div class="sheet" id="sheet"></div></div>
+  <div class="nav"><div class="in">
+    <button class="btn ghost" id="back">Trước</button>
+    <div class="prog"><i id="prog"></i></div>
+    <button class="btn" id="next">Lật trang</button>
+  </div></div>
+</section>
+
+<!-- PARENTS -->
+<section class="view" id="vParents"><div class="parents"><div class="sheet" id="psheet"></div></div></section>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+
+/* ---------- DATA ---------- */
+const SEAS=[
+  {name:'Biển Không Đưa',law:'Thông tin của con, con không đưa.'},
+  {name:'Biển Không Tin Ngay',law:'Thấy tận mắt chưa chắc đã thật.'},
+  {name:'Biển Khi Đã Lỡ',law:'Lỡ rồi vẫn sửa được, miễn là con kể.'}
+];
+const ISLANDS=[
+ {id:'mat-khau',sea:0,name:'Đảo Mật Khẩu',skill:'Giữ mật khẩu và mã OTP, kể cả với bạn thân.',x:185,y:440},
+ {id:'link-la',sea:0,name:'Đảo Link Lạ',skill:'Nhận ra trang web bẫy trước khi điền hay đăng nhập.',x:290,y:225,ready:true},
+ {id:'giong-noi',sea:1,name:'Đảo Giọng Nói Giả',skill:'Kiểm chứng trước khi tin, kể cả khi thấy mặt, nghe giọng.',x:480,y:430,ready:true},
+ {id:'idol',sea:1,name:'Đảo Idol Phát Quà',skill:'Nhận ra livestream giả mạo tặng quà.',x:575,y:200},
+ {id:'mat-acc',sea:2,name:'Đảo Mất Acc',skill:'Các bước cần làm ngay khi bị chiếm tài khoản.',x:745,y:440},
+ {id:'ke-lai',sea:2,name:'Đảo Kể Lại',skill:'Lỡ rồi thì kể, và kể sao cho bố mẹ hiểu.',x:835,y:215,ready:true}
+];
+
+const GEM=`<svg class="gem" viewBox="0 0 60 50"><path d="M12 2h36l12 16-30 30L0 18z" fill="#B57BFF" stroke="#4A1A80" stroke-width="3"/><path d="M0 18h60M18 2l12 46M42 2L30 48" stroke="#4A1A80" stroke-width="2" fill="none"/></svg>`;
+
+const CONTENT={
+'link-la':{pages:[
+  `<h2>Tin nhắn lúc 9 giờ tối</h2><p>Minh đang chơi game Đảo Rồng.</p><div class="log">“Tặng 10.000 Kim Cương miễn phí! Bấm ngay kẻo hết!”</div><p>Minh bấm vào. Một trang web hiện ra, trông y hệt trang của game.</p>`,
+  `<h2>Trang đó đòi gì?</h2><p>Ô thứ nhất: tên tài khoản.</p><p>Ô thứ hai: mật khẩu.</p><p class="big">Game thật không bao giờ tặng quà bằng cách bắt con điền mật khẩu.</p>`,
+  `<h2>Nếu Minh điền thì sao?</h2><p>Kẻ xấu lấy được acc của Minh.</p><p>Mất hết đồ đã cày.</p><p>Rồi chúng dùng chính acc đó nhắn cho bạn bè Minh: “Bấm link này nhận quà nè!”</p><p class="big">Một cú bấm, cả nhóm bạn gặp nạn.</p>`,
+  `<h2>4 dấu hiệu trang bẫy</h2><ul class="rules"><li><b>Quá hời</b><span>Miễn phí, tặng khủng, trúng thưởng.</span></li><li><b>Hối thúc</b><span>Đồng hồ đếm ngược, “kẻo hết”.</span></li><li><b>Đòi mật khẩu</b><span>Bắt đăng nhập để nhận quà.</span></li><li><b>Địa chỉ lạ</b><span>Tên web na ná, đuôi lạ.</span></li></ul><div class="law">Luật biển: Thông tin của con, con không đưa.</div>`
+ ],
+ game:[
+  {type:'flags',title:'Soi trang bẫy',hint:'Chạm vào 4 chỗ có dấu hiệu bẫy trên trang này.',
+   html:`<div class="fake">
+     <div class="url"><span class="dotz"><i></i><i></i><i></i></span><span class="flag" tabindex="0" data-t="Địa chỉ lạ">daorong-quatang-vip.xyz</span></div>
+     <div class="body">${GEM}
+      <div class="hd flag" tabindex="0" data-t="Quá hời">TẶNG 10.000 KIM CƯƠNG MIỄN PHÍ</div>
+      <div class="tm flag" tabindex="0" data-t="Hối thúc">Chỉ còn 02:59 phút!</div>
+      <div class="inp flag" tabindex="0" data-t="no" data-m="Ô tên tài khoản thì trang nào cũng có. Xem ô bên dưới nhé.">Tên tài khoản</div>
+      <div class="inp flag" tabindex="0" data-t="Đòi mật khẩu">Mật khẩu</div>
+      <div class="go flag" tabindex="0" data-t="no" data-m="Nút bấm bình thường. Dấu hiệu nằm ở những gì trang đòi con làm.">Nhận quà</div>
+     </div></div>`,
+   need:['Quá hời','Hối thúc','Đòi mật khẩu','Địa chỉ lạ'],
+   done:'Đủ 4 dấu hiệu! Trang trông giống thật, nhưng nó đòi đúng thứ con không bao giờ được đưa.'},
+  {type:'choice',title:'Giờ Minh làm gì?',
+   opts:[['Điền thử tên tài khoản thôi, chưa điền mật khẩu',0,'Điền gì cũng là đưa thông tin cho trang lạ. Thử lại nhé.'],
+         ['Đóng trang, nhắn cho bạn: “Đừng bấm link này, bẫy đó”',1,'Chuẩn thuyền trưởng! Con vừa giữ được acc và cứu luôn cả nhóm bạn.'],
+         ['Gửi link cho bạn thân hỏi xem thật không',0,'Gửi link đi là có thể kéo bạn vào bẫy. Đóng trang và cảnh báo thì an toàn hơn.']]}
+ ]},
+'giong-noi':{pages:[
+  `<h2>Cuộc gọi video</h2><p>Tối thứ Sáu, điện thoại của Lan rung.</p><div class="call"><div class="face">Bà</div><div>Bà nội</div><div class="sub">Đang gọi video…</div><div class="say">“Cháu ơi, đọc cho bà mã số vừa gửi về máy cháu đi, nhanh lên nhé!”</div></div><p>Đúng mặt bà. Đúng giọng bà.</p>`,
+  `<h2>Nhưng đó không phải bà.</h2><p>Kẻ xấu chỉ cần <b>vài giây giọng nói</b> là AI làm ra được giọng y hệt.</p><p>Vài tấm ảnh trên mạng là đủ để làm khuôn mặt biết nói.</p><p class="big">Mắt và tai không đủ để biết thật hay giả.</p>`,
+  `<h2>Vậy làm sao biết?</h2><p class="big">Đừng xem nó trông thế nào. Xem nó đòi gì.</p><p>“Bà” đang hối thúc. “Bà” đang xin mã số.</p><p>Bà thật không cần cháu đọc mã số qua điện thoại.</p>`,
+  `<h2>Hai chiêu kiểm chứng</h2><ul class="rules"><li><b>Gọi lại</b><span>Cúp máy, gọi vào số của bà đã lưu từ trước.</span></li><li><b>Mật mã</b><span>Hỏi điều chỉ người nhà biết, ví dụ “Con mèo nhà mình tên gì?”.</span></li></ul><div class="law">Luật biển: Thấy tận mắt chưa chắc đã thật.</div>`
+ ],
+ game:[
+  {type:'choice',title:'Lan nên làm gì?',
+   pre:`<div class="call"><div class="face">Bà</div><div class="sub">Đang gọi video…</div><div class="say">“Nhanh lên cháu, bà chỉ còn 5 phút!”</div></div>`,
+   opts:[['Đọc mã luôn, đúng mặt bà mà',0,'Mặt và giọng đều có thể là giả. Thử lại nhé.'],
+         ['Hỏi ngay trong cuộc gọi: “Bà thật không đó?”',0,'Kẻ giả sẽ trả lời “Bà thật mà!”. Phải hỏi bằng đường khác.'],
+         ['Cúp máy, gọi lại số bà đã lưu từ trước',1,'Bà thật bắt máy: “Bà đang xem phim mà cháu, bà có gọi đâu?”. Lộ rồi!']]},
+  {type:'choice',title:'Lần sau, câu mật mã nào tốt nhất?',
+   opts:[['“Bà tên là gì?”',0,'Tên bà có thể tra được trên mạng.'],
+         ['“Bà có khoẻ không?”',0,'Ai cũng trả lời được câu này.'],
+         ['“Con mèo nhà mình tên gì?”',1,'Tuyệt! AI giả được mặt nhưng không biết điều chỉ nhà mình biết.']]}
+ ]},
+'ke-lai':{pages:[
+  `<h2>Sáng thứ Bảy</h2><p>Tối qua An lỡ điền mật khẩu vào một trang lạ.</p><p>Sáng nay, acc của An đã mất.</p><div class="log">“Chết rồi. Bố mẹ biết là mình bị mắng, bị thu điện thoại. Bạn biết là bị cười.”</div>`,
+  `<h2>An định giấu.</h2><p>Nhưng trong lúc An im lặng, kẻ xấu dùng acc của An nhắn cho cả lớp.</p><p>Thêm 3 bạn nữa bị lừa.</p><p class="big">Giấu không làm chuyện nhỏ đi. Giấu làm chuyện to ra.</p>`,
+  `<h2>Lỡ rồi vẫn sửa được.</h2><p>Kể càng sớm, sửa càng nhanh:</p><p>Đổi mật khẩu. Báo cáo acc bị chiếm. Nhắn bạn bè đừng tin tin nhắn từ acc mình.</p><p>Và kể với một người lớn mình tin.</p>`,
+  `<h2>Kể thế nào cho dễ?</h2><p>Nói thật là mình đang sợ.</p><p>Xin bố mẹ nghe hết trước đã.</p><p>Bố mẹ của con cũng đang học cách lắng nghe. Robook có một trang riêng dạy bố mẹ điều đó.</p><div class="law">Luật biển: Lỡ rồi vẫn sửa được, miễn là con kể.</div>`
+ ],
+ game:[
+  {type:'multi',title:'Chọn tất cả việc An nên làm',
+   opts:[['Kể với một người lớn mình tin',1],['Giấu đi, tự lo cho đỡ bị mắng',0],['Đổi mật khẩu các tài khoản khác',1],['Nhắn bạn bè: đừng tin tin nhắn từ acc mình',1],['Xoá game cho đỡ sợ',0],['Báo cáo tài khoản bị chiếm',1]],
+   ok:'Đúng hết! Đây là 4 việc giúp chặn chuyện lan ra.',no:'Chưa đúng hết. Có 4 việc nên làm. Việc nào cho kẻ xấu thêm thời gian thì bỏ ra.'},
+  {type:'choice',title:'Câu mở lời nào giúp An dễ kể nhất?',
+   opts:[['“Không có gì đâu ạ.”',0,'Câu này là giấu đi rồi. Thử câu khác nhé.'],
+         ['“Tại bạn Nam rủ con bấm, không phải lỗi con.”',0,'Đổ lỗi làm câu chuyện thành cãi nhau. Nói thật cảm xúc của mình sẽ dễ hơn.'],
+         ['“Bố mẹ ơi, con lỡ làm một chuyện trên mạng. Con hơi sợ, bố mẹ nghe con kể hết trước được không?”',1,'Chuẩn! Nói mình sợ và xin được nghe trước giúp bố mẹ bình tĩnh lắng nghe.']]}
+ ]}
+};
+
+/* ---------- STATE ---------- */
+let done=[];
+try{const s=JSON.parse(localStorage.getItem('robook-voyage'));if(Array.isArray(s))done=s}catch(e){}
+const save=()=>{try{localStorage.setItem('robook-voyage',JSON.stringify(done))}catch(e){}};
+const ready=ISLANDS.filter(i=>i.ready);
+const allReadyDone=()=>ready.every(i=>done.includes(i.id));
+
+function toast(t){const el=$('#toast');el.textContent=t;el.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>el.style.display='none',2600)}
+function renderPieces(){
+  $('#slots').innerHTML=ISLANDS.map((_,i)=>`<span class="slot ${i<done.length?'on':''}"></span>`).join('');
+  $('#pc').textContent=done.length+'/6';
+}
+function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('show',x.id===v));window.scrollTo(0,0)}
+
+/* ---------- MAP ---------- */
+function islandSVG(i){
+  const d=done.includes(i.id),lk=!i.ready;
+  const flag=d?'#FFC93C':(lk?'#9AAEC2':'#FF6B4A');
+  return `<g class="isl ${lk?'locked':''}" data-id="${i.id}" tabindex="0" role="button" aria-label="${i.name}${lk?' (sắp mở)':''}${d?' (đã qua)':''}" transform="translate(${i.x} ${i.y})">
+    <g class="body">
+      <ellipse cx="0" cy="18" rx="92" ry="44" fill="#1C7FB0" opacity=".55"/>
+      <path class="ring" d="M-78 10 C-70 -30 -20 -46 18 -40 C60 -34 84 -8 78 18 C70 44 20 52 -20 48 C-60 44 -84 34 -78 10Z" fill="#F2C46D" stroke="#0A3A5C" stroke-width="4"/>
+      <path d="M-52 4 C-46 -22 -10 -32 16 -28 C44 -24 58 -6 52 10 C44 26 10 30 -16 28 C-40 26 -56 20 -52 4Z" fill="#2FA36B"/>
+      <line x1="10" y1="-26" x2="10" y2="-86" stroke="#0A3A5C" stroke-width="5"/>
+      <path d="M12 -86 L56 -74 L12 -60Z" fill="${flag}" stroke="#0A3A5C" stroke-width="3"/>
+      ${lk?`<g transform="translate(-26 -52)"><rect x="-14" y="-4" width="28" height="22" rx="4" fill="#0A3A5C"/><path d="M-8 -4v-6a8 8 0 0 1 16 0v6" stroke="#0A3A5C" stroke-width="4" fill="none"/></g>`:''}
+      ${d?`<circle cx="-30" cy="-40" r="16" fill="#FFC93C" stroke="#0A3A5C" stroke-width="3"/><path d="M-38 -40l6 6 10-12" stroke="#0A3A5C" stroke-width="4" fill="none" stroke-linecap="round"/>`:''}
+    </g>
+    <text class="lbl" x="0" y="${i.y>300?92:96}" text-anchor="middle">${i.name}</text>
+  </g>`;
+}
+function renderMap(){
+  const pts=[[55,585],...ISLANDS.map(i=>[i.x,i.y]),[940,540]];
+  let path=`M${pts[0][0]} ${pts[0][1]}`;
+  for(let k=1;k<pts.length;k++){const [a,b]=pts[k-1],[c,d]=pts[k];path+=` Q${(a+c)/2} ${(b+d)/2+(k%2?60:-60)} ${c} ${d}`}
+  const open=allReadyDone();
+  $('#map').innerHTML=`
+   <defs><pattern id="wv" width="60" height="30" patternUnits="userSpaceOnUse"><path d="M0 20 Q15 10 30 20 T60 20" stroke="#2C79A8" stroke-width="2" fill="none" opacity=".5"/></pattern></defs>
+   <rect width="1000" height="620" fill="#0D4F7C"/><rect width="1000" height="620" fill="url(#wv)"/>
+   <rect x="0" y="0" width="372" height="620" fill="#0F5B8C" opacity=".35"/><rect x="628" y="0" width="372" height="620" fill="#0F5B8C" opacity=".35"/>
+   <text class="sealbl" x="186" y="44" text-anchor="middle">Biển Không Đưa</text>
+   <text class="sealbl" x="500" y="44" text-anchor="middle">Biển Không Tin Ngay</text>
+   <text class="sealbl" x="814" y="44" text-anchor="middle">Biển Khi Đã Lỡ</text>
+   <path d="${path}" stroke="#fff" stroke-width="4" stroke-dasharray="4 14" stroke-linecap="round" fill="none" opacity=".75"/>
+   <g transform="translate(55 585)"><g class="bob"><path d="M-34 0 L34 0 L24 18 L-24 18Z" fill="#8A5A3B" stroke="#072A43" stroke-width="3"/><line x1="0" y1="0" x2="0" y2="-52" stroke="#072A43" stroke-width="4"/><path d="M3 -50 L30 -14 L3 -14Z" fill="#fff" stroke="#072A43" stroke-width="3"/><path d="M-3 -46 L-24 -16 L-3 -16Z" fill="#FFC93C" stroke="#072A43" stroke-width="3"/></g></g>
+   ${ISLANDS.map(islandSVG).join('')}
+   <g class="isl ${open?'':'locked'}" data-id="treasure" tabindex="0" role="button" aria-label="Kho báu${open?'':' (chưa mở)'}" transform="translate(930 540)">
+     <g class="body"><rect class="ring" x="-40" y="-20" width="80" height="50" rx="6" fill="#B5762E" stroke="#072A43" stroke-width="4"/>
+     <path d="M-40 -20 Q0 -52 40 -20Z" fill="${open?'#FFC93C':'#C48A3C'}" stroke="#072A43" stroke-width="4"/>
+     <rect x="-8" y="-6" width="16" height="16" rx="3" fill="#FFC93C" stroke="#072A43" stroke-width="3"/></g>
+     <text class="lbl" x="-20" y="-58" text-anchor="middle">Kho báu</text>
+   </g>`;
+  $('#list').innerHTML=SEAS.map((s,si)=>`<div class="sea-col"><h3>${s.name}</h3>${ISLANDS.filter(i=>i.sea===si).map(i=>`
+     <button class="ibtn ${done.includes(i.id)?'done':''} ${i.ready?'':'locked'}" data-id="${i.id}"><span class="dot"></span><span>${i.name}<small>${i.ready?(done.includes(i.id)?'Đã qua đảo':'Sẵn sàng ra khơi'):'Sắp mở'}</small></span></button>`).join('')}</div>`).join('');
+  document.querySelectorAll('[data-id]').forEach(el=>{
+    const go=()=>openIsland(el.dataset.id);
+    el.onclick=go; el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
+  });
+  renderPieces();
+}
+
+/* ---------- ISLAND ---------- */
+let cur=null,idx=0,steps=[],cleared={};
+function openIsland(id){
+  if(id==='treasure'){ if(allReadyDone()) return openTreasure(); return toast(`Qua đủ ${ready.length} đảo đang mở để mở kho báu nhé.`)}
+  const isl=ISLANDS.find(i=>i.id===id);
+  if(!isl.ready) return toast(`${isl.name} sắp mở. Kỹ năng: ${isl.skill}`);
+  cur=isl;idx=0;cleared={};
+  const c=CONTENT[id];
+  steps=[...c.pages.map(h=>({type:'read',html:h})),...c.game,{type:'reward'}];
+  show('vIsland');renderStep();
+}
+function renderStep(){
+  const s=steps[idx],sh=$('#sheet'),sea=SEAS[cur.sea];
+  const nGame=steps.filter(x=>x.type!=='read'&&x.type!=='reward').length;
+  const gi=steps.slice(0,idx+1).filter(x=>x.type!=='read'&&x.type!=='reward').length;
+  let locked=false;
+  sh.innerHTML=`<div class="page-anim" id="pa"></div>`;const pa=$('#pa');
+  const crumb=`<div class="crumb">${sea.name} · ${cur.name}</div><br>`;
+  if(s.type==='read'){pa.innerHTML=crumb+s.html}
+  else if(s.type==='reward'){
+    const first=!done.includes(cur.id); if(first){done.push(cur.id);save()}
+    pa.innerHTML=`<div class="reward">
+      <svg class="piece" viewBox="0 0 120 100"><path d="M10 10 L60 4 L60 30 Q74 22 74 40 Q74 56 60 50 L60 96 L10 90 Z" fill="#FFC93C" stroke="#072A43" stroke-width="4"/><path d="M20 70 L30 60 L40 70 L50 58" stroke="#072A43" stroke-width="3" fill="none" stroke-dasharray="4 5"/><path d="M28 30 l8 8 m0 -8 l-8 8" stroke="#E5484D" stroke-width="4"/></svg>
+      <h2>Qua đảo rồi!</h2><br><br>
+      <p>Con nhận được <b>mảnh bản đồ</b> của ${cur.name}.</p>
+      <p class="small">Kỹ năng mới: ${cur.skill}</p>
+      <div class="law" style="display:inline-block">${sea.law}</div>
+      <p style="margin-top:22px"><button class="btn sea" id="toMap">Về bản đồ</button></p></div>`;
+    $('#toMap').onclick=home;
+  } else {
+    pa.innerHTML=crumb+`<span class="gtag">Thử thách ${gi}/${nGame}</span><br><h2>${s.title}</h2>`+renderGame(s);
+    locked=!cleared[idx];
+    bindGame(s,pa);
+  }
+  const last=idx===steps.length-1;
+  $('#back').style.visibility=idx===0?'hidden':'visible';
+  $('#next').style.visibility=last?'hidden':'visible';
+  $('#next').disabled=locked;
+  const nxt=steps[idx+1];
+  $('#next').textContent=!nxt?'':(nxt.type==='reward'?'Nhận mảnh bản đồ':(s.type==='read'&&nxt.type!=='read'?'Vào thử thách':'Lật trang'));
+  $('#prog').style.width=(idx/(steps.length-1)*100)+'%';
+  renderPieces(); window.scrollTo(0,0);
+}
+function renderGame(s){
+  if(s.type==='flags') return `<p class="small">${s.hint}</p><div class="found">${s.need.map(n=>`<span data-n="${n}">${n}</span>`).join('')}</div>${s.html}<div id="gfb"></div>`;
+  if(s.type==='choice') return `${s.pre||''}<div class="choices">${s.opts.map((o,i)=>`<button class="choice" data-i="${i}">${o[0]}</button>`).join('')}</div><div id="gfb"></div>`;
+  if(s.type==='multi') return `<div class="choices">${s.opts.map((o,i)=>`<button class="choice" data-i="${i}" aria-pressed="false">${o[0]}</button>`).join('')}</div><button class="btn sea" id="chk">Kiểm tra</button><div id="gfb" style="margin-top:12px"></div>`;
+}
+function pass(){cleared[idx]=true;$('#next').disabled=false}
+function bindGame(s,el){
+  const fb=el.querySelector('#gfb');
+  if(cleared[idx]){fb.innerHTML=`<div class="fb">Con đã vượt thử thách này rồi.</div>`;return}
+  if(s.type==='flags'){
+    const got=new Set();
+    el.querySelectorAll('.flag').forEach(f=>{
+      const act=()=>{
+        const t=f.dataset.t;
+        if(t==='no'){f.classList.remove('miss');void f.offsetWidth;f.classList.add('miss');fb.innerHTML=`<div class="fb info">${f.dataset.m}</div>`;return}
+        f.classList.add('hit');got.add(t);el.querySelector(`.found [data-n="${t}"]`).classList.add('on');
+        if(got.size===s.need.length){fb.innerHTML=`<div class="fb">${s.done}</div>`;pass()}
+        else fb.innerHTML=`<div class="fb">Tìm được “${t}”. Còn ${s.need.length-got.size} dấu hiệu nữa.</div>`;
+      };
+      f.onclick=act;f.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();act()}};
+    });
+  }
+  if(s.type==='choice'){
+    el.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{
+      const o=s.opts[b.dataset.i];
+      el.querySelectorAll('.choice').forEach(c=>c.classList.remove('wrong'));
+      if(o[1]){el.querySelectorAll('.choice').forEach(c=>c.disabled=true);b.classList.add('right');fb.innerHTML=`<div class="fb">${o[2]}</div>`;pass()}
+      else{b.classList.add('wrong');fb.innerHTML=`<div class="fb bad">${o[2]}</div>`}
+    });
+  }
+  if(s.type==='multi'){
+    el.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{const on=b.classList.toggle('picked');b.setAttribute('aria-pressed',on)});
+    el.querySelector('#chk').onclick=function(){
+      const ok=s.opts.every((o,i)=>el.querySelector(`[data-i="${i}"]`).classList.contains('picked')===!!o[1]);
+      if(ok){s.opts.forEach((o,i)=>{const b=el.querySelector(`[data-i="${i}"]`);b.disabled=true;b.classList.remove('picked');b.classList.add(o[1]?'right':'wrong')});this.disabled=true;fb.innerHTML=`<div class="fb">${s.ok}</div>`;pass()}
+      else fb.innerHTML=`<div class="fb bad">${s.no}</div>`;
+    };
+  }
+}
+$('#next').onclick=()=>{if(!$('#next').disabled){idx++;renderStep()}};
+$('#back').onclick=()=>{if(idx>0){idx--;renderStep()}};
+
+/* ---------- TREASURE ---------- */
+function openTreasure(){
+  cur={name:'Kho báu',sea:0};
+  show('vIsland');
+  $('#sheet').innerHTML=`<div class="reward page-anim">
+    <svg class="piece" viewBox="0 0 160 140" style="width:190px"><circle cx="80" cy="70" r="64" fill="#FFC93C" stroke="#072A43" stroke-width="5"/><circle cx="80" cy="70" r="50" fill="none" stroke="#072A43" stroke-width="3" stroke-dasharray="5 7"/><path d="M80 28 L92 58 L124 60 L99 80 L107 112 L80 94 L53 112 L61 80 L36 60 L68 58Z" fill="#FF6B4A" stroke="#072A43" stroke-width="4"/></svg>
+    <h2>Thuyền Trưởng Tập Sự</h2><br><br>
+    <p>Con đã vượt cả 3 vùng biển. Ba luật biển con mang theo:</p>
+    <ul class="rules" style="max-width:440px;margin:0 auto 14px;text-align:left">
+      <li><b>Không đưa</b><span>Thông tin của con, con giữ.</span></li>
+      <li><b>Không tin ngay</b><span>Thấy tận mắt chưa chắc đã thật.</span></li>
+      <li><b>Khi đã lỡ</b><span>Kể ra, rồi cùng sửa.</span></li></ul>
+    <p class="small">Các đảo còn lại sẽ sớm mở. Hẹn con ở chuyến ra khơi tới.</p>
+    <p><button class="btn sea" id="toMap2">Về bản đồ</button></p></div>`;
+  $('#back').style.visibility='hidden';$('#next').style.visibility='hidden';$('#prog').style.width='100%';
+  $('#toMap2').onclick=home;
+}
+
+/* ---------- PARENTS ---------- */
+function openParents(){
+  $('#psheet').innerHTML=`
+   <h2>Dành cho bố mẹ</h2><br><br>
+   <p>Robook dạy con những kỹ năng mà chính bố mẹ chưa từng được dạy: nhận ra trang web bẫy, cuộc gọi giả giọng người thân, và biết làm gì khi đã lỡ. Con học bằng truyện ngắn và tình huống mô phỏng, không phải bằng lời cấm.</p>
+   <h3>Con đang ở đâu trên hải trình</h3>
+   <table class="ptable">${ISLANDS.map(i=>`<tr><td>${i.name}</td><td>${i.skill}</td><td><span class="st ${done.includes(i.id)?'ok':''}">${done.includes(i.id)?'Đã qua':(i.ready?'Chưa qua':'Sắp mở')}</span></td></tr>`).join('')}</table>
+   <h3>Ba việc bố mẹ làm cùng con</h3>
+   <ol class="do">
+    <li><b>Đặt một câu mật mã gia đình.</b> Một câu hỏi chỉ người trong nhà biết, dùng khi có cuộc gọi đáng ngờ.</li>
+    <li><b>Khi con kể chuyện đã lỡ: cảm ơn trước, sửa sau.</b> “Cảm ơn con đã kể với bố mẹ” là câu đầu tiên con cần nghe.</li>
+    <li><b>Không tịch thu điện thoại vì con đã nói thật.</b> Nếu nói thật bị phạt, lần sau con sẽ chọn im lặng.</li>
+   </ol>
+   <h3>Về dữ liệu của con</h3>
+   <p>Robook không hỏi tên thật, ảnh hay số điện thoại của con. Tiến độ chỉ lưu trên máy đang dùng.</p>
+   <p style="margin-top:20px"><button class="btn sea" id="pBack">Về bản đồ</button></p>`;
+  $('#pBack').onclick=home;
+  show('vParents');
+}
+
+function home(){renderMap();show('vMap')}
+$('#goHome').onclick=home;$('#goParents').onclick=openParents;
+renderMap();
+</script>
+</body>
+</html>
